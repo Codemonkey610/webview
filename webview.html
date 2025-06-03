@@ -111,12 +111,9 @@
                     window.uni.postMessage({
                         data: postMsg
                     });
-                } else if (window.__dcloud_weex_postMessage) {
-                    window.__dcloud_weex_postMessage(postMsg);
-                } else if (window.__dcloud_weex_) {
-                    window.__dcloud_weex_.postMessage(JSON.stringify(postMsg));
                 } else {
-                    throw new Error('未找到可用的通信方法');
+                    // 使用 window.parent 发送消息
+                    window.parent.postMessage(postMsg, '*');
                 }
                 
                 // 设置回调
