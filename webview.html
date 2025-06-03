@@ -1,30 +1,144 @@
-<!-- h5.html -->
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>H5 与 UniApp 通信</title>
-  <script src="./uni.webview.1.5.6.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H5与UniApp通信示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007AFF;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+    </style>
 </head>
 <body>
-  <h1>H5 页面</h1>
-  <button onclick="sendToApp()">发送消息到 App</button>
+    <h1>H5与UniApp通信示例</h1>
+    
+    <div class="button-group">
+        <button onclick="handleScanCode()">扫码</button>
+        <button onclick="handleChooseImage()">选择图片</button>
+        <button onclick="handleCreateMessage()">发送通知</button>
+        <button onclick="handleGetSystemInfo()">获取系统信息</button>
+    </div>
 
-  <script>
-    function sendToApp() {
-      uni.postMessage({
-        data: {
-          msg: 'Hello from H5!',
-          time: Date.now(),
-        },
-      });
-    }
+    <div class="result" id="result">
+        结果将显示在这里...
+    </div>
 
-    // 接收来自 App 的消息（通过 evalJS 调用）
-    window.onAppMessage = function(data) {
-      console.log('收到 App 的消息:', data);
-      alert('收到 App 的消息：' + JSON.stringify(data));
-    };
-  </script>
+    <script>
+        // 判断是否在 uni-app 环境内
+        let isMiniProgram = window.__wxjs_environment === 'miniprogram' || /miniProgram/i.test(navigator.userAgent);
+        let isApp = !!(window.__dcloud_weex_postMessage || window.__dcloud_weex_ || isMiniProgram);
+
+        // 向 APP 发送消息的核心方法
+        let postMessageToApp = (data, callback = res => res, once = true) => {
+            if (!isApp) {
+                showResult('当前不在APP环境中');
+                return callback("{ fail: '不在APP内' }");
+            }
+            
+            // 生成唯一ID用于回调
+            let uniqueId = '__appid_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+            
+            // 构造消息对象
+            let postMsg = {
+                ...data,
+                key: uniqueId,
+            };
+            
+            // 发送消息到 APP
+            window.__dcloud_weex_postMessage ? 
+                window.__dcloud_weex_postMessage(postMsg) :
+                window.__dcloud_weex_.postMessage(JSON.stringify(postMsg));
+            
+            // 设置回调
+            window.top[uniqueId] = null;
+            Object.defineProperty(window.top, uniqueId, {
+                set(value) {
+                    once && delete window.top[uniqueId];
+                    callback(value);
+                },
+            });
+            
+            return true;
+        };
+
+        // 显示结果
+        function showResult(result) {
+            document.getElementById('result').innerHTML = 
+                typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
+        }
+
+        // 扫码
+        function handleScanCode() {
+            postMessageToApp({
+                method: 'scanCode'
+            }, res => {
+                showResult('扫码结果: ' + res);
+            });
+        }
+
+        // 选择图片
+        function handleChooseImage() {
+            postMessageToApp({
+                method: 'chooseImage',
+                message: {
+                    count: 1,
+                    sourceType: ['album', 'camera']
+                }
+            }, res => {
+                showResult('选择图片结果: ' + res);
+            });
+        }
+
+        // 发送通知
+        function handleCreateMessage() {
+            postMessageToApp({
+                method: 'createMessage',
+                message: {
+                    title: '测试通知',
+                    content: '这是一条测试通知'
+                }
+            }, res => {
+                showResult('通知发送结果: ' + res);
+            });
+        }
+
+        // 获取系统信息
+        function handleGetSystemInfo() {
+            postMessageToApp({
+                method: 'getSystemInfo'
+            }, res => {
+                showResult('系统信息: ' + res);
+            });
+        }
+    </script>
 </body>
 </html>
