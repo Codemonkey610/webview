@@ -74,7 +74,7 @@
             let isMiniProgram = window.__wxjs_environment === 'miniprogram' || /miniProgram/i.test(navigator.userAgent);
             
             // 检查是否在APP环境
-            let isApp = !!(window.__dcloud_weex_postMessage || window.__dcloud_weex_);
+            let isApp = /uni-app/i.test(navigator.userAgent) || /Html5Plus/i.test(navigator.userAgent);
             
             // 检查是否在H5环境
             let isH5 = window.location.protocol === 'http:' || window.location.protocol === 'https:';
@@ -107,7 +107,11 @@
             
             try {
                 // 发送消息到 APP
-                if (window.__dcloud_weex_postMessage) {
+                if (window.uni) {
+                    window.uni.postMessage({
+                        data: postMsg
+                    });
+                } else if (window.__dcloud_weex_postMessage) {
                     window.__dcloud_weex_postMessage(postMsg);
                 } else if (window.__dcloud_weex_) {
                     window.__dcloud_weex_.postMessage(JSON.stringify(postMsg));
