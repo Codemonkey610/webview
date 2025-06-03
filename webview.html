@@ -54,13 +54,29 @@
 
     <script>
         // 判断是否在 uni-app 环境内
-        let isMiniProgram = window.__wxjs_environment === 'miniprogram' || /miniProgram/i.test(navigator.userAgent);
-        let isApp = !!(window.__dcloud_weex_postMessage || window.__dcloud_weex_ || isMiniProgram);
+        function checkIsUniApp() {
+            // 检查是否在小程序环境
+            let isMiniProgram = window.__wxjs_environment === 'miniprogram' || /miniProgram/i.test(navigator.userAgent);
+            
+            // 检查是否在APP环境
+            let isApp = !!(window.plus || window.__dcloud_weex_postMessage || window.__dcloud_weex_);
+            
+            // 检查是否在H5环境
+            let isH5 = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+            
+            return {
+                isMiniProgram,
+                isApp,
+                isH5
+            };
+        }
 
         // 向 APP 发送消息的核心方法
         let postMessageToApp = (data, callback = res => res, once = true) => {
-            if (!isApp) {
-                showResult('当前不在APP环境中');
+            const env = checkIsUniApp();
+            
+            if (!env.isApp) {
+                showResult('当前不在APP环境中，环境信息：' + JSON.stringify(env));
                 return callback("{ fail: '不在APP内' }");
             }
             
@@ -73,21 +89,31 @@
                 key: uniqueId,
             };
             
-            // 发送消息到 APP
-            window.__dcloud_weex_postMessage ? 
-                window.__dcloud_weex_postMessage(postMsg) :
-                window.__dcloud_weex_.postMessage(JSON.stringify(postMsg));
-            
-            // 设置回调
-            window.top[uniqueId] = null;
-            Object.defineProperty(window.top, uniqueId, {
-                set(value) {
-                    once && delete window.top[uniqueId];
-                    callback(value);
-                },
-            });
-            
-            return true;
+            try {
+                // 发送消息到 APP
+                if (window.__dcloud_weex_postMessage) {
+                    window.__dcloud_weex_postMessage(postMsg);
+                } else if (window.__dcloud_weex_) {
+                    window.__dcloud_weex_.postMessage(JSON.stringify(postMsg));
+                } else if (window.plus) {
+                    // 使用plus对象发送消息
+                    window.plus.postMessage(postMsg);
+                }
+                
+                // 设置回调
+                window[uniqueId] = null;
+                Object.defineProperty(window, uniqueId, {
+                    set(value) {
+                        once && delete window[uniqueId];
+                        callback(value);
+                    },
+                });
+                
+                return true;
+            } catch (error) {
+                showResult('发送消息失败：' + error.message);
+                return false;
+            }
         };
 
         // 显示结果
@@ -139,6 +165,12 @@
                 showResult('系统信息: ' + res);
             });
         }
+
+        // 页面加载完成后检查环境
+        window.onload = function() {
+            const env = checkIsUniApp();
+            showResult('当前环境信息：' + JSON.stringify(env));
+        };
     </script>
 </body>
 </html>
