@@ -1,0 +1,30 @@
+<!-- h5.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>H5 与 UniApp 通信</title>
+  <script src="https://gitcode.net/dcloud/uni-app/-/raw/dev/dist/uni.webview.1.5.6.js"></script>
+</head>
+<body>
+  <h1>H5 页面</h1>
+  <button onclick="sendToApp()">发送消息到 App</button>
+
+  <script>
+    function sendToApp() {
+      uni.postMessage({
+        data: {
+          msg: 'Hello from H5!',
+          time: Date.now(),
+        },
+      });
+    }
+
+    // 接收来自 App 的消息（通过 evalJS 调用）
+    window.onAppMessage = function(data) {
+      console.log('收到 App 的消息:', data);
+      alert('收到 App 的消息：' + JSON.stringify(data));
+    };
+  </script>
+</body>
+</html>
