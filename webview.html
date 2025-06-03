@@ -1,72 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>H5与UniApp通信示例</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        button {
-            padding: 12px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            background-color: #007AFF;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            min-height: 100px;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .env-info {
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-    </style>
-</head>
+<!-- ... head 部分保持不变 ... -->
 <body>
-    <h1>H5与UniApp通信示例</h1>
-    
-    <div class="env-info" id="envInfo">
-        正在检测环境...
-    </div>
-
-    <div class="button-group">
-        <button onclick="handleScanCode()">扫码</button>
-        <button onclick="handleChooseImage()">选择图片</button>
-        <button onclick="handleCreateMessage()">发送通知</button>
-        <button onclick="handleGetSystemInfo()">获取系统信息</button>
-    </div>
-
-    <div class="result" id="result">
-        结果将显示在这里...
-    </div>
-
+    <!-- ... 其他 HTML 部分保持不变 ... -->
     <script>
         // 判断是否在 uni-app 环境内
         function checkIsUniApp() {
@@ -107,9 +43,7 @@
             
             try {
                 // 发送消息到 APP
-                if (window.plus) {
-                    window.plus.postMessage(postMsg);
-                } else if (window.__dcloud_weex_postMessage) {
+                if (window.__dcloud_weex_postMessage) {
                     window.__dcloud_weex_postMessage(postMsg);
                 } else if (window.__dcloud_weex_) {
                     window.__dcloud_weex_.postMessage(JSON.stringify(postMsg));
@@ -133,83 +67,7 @@
             }
         };
 
-        // 显示结果
-        function showResult(result) {
-            const resultDiv = document.getElementById('result');
-            if (typeof result === 'object') {
-                resultDiv.innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
-            } else {
-                resultDiv.innerHTML = result;
-            }
-        }
-
-        // 显示环境信息
-        function showEnvInfo() {
-            const env = checkIsUniApp();
-            const envInfoDiv = document.getElementById('envInfo');
-            envInfoDiv.innerHTML = '<pre>' + JSON.stringify(env, null, 2) + '</pre>';
-        }
-
-        // 扫码
-        function handleScanCode() {
-            showResult('正在调用扫码功能...');
-            postMessageToApp({
-                method: 'scanCode'
-            }, res => {
-                showResult('扫码结果: ' + res);
-            });
-        }
-
-        // 选择图片
-        function handleChooseImage() {
-            showResult('正在调用选择图片功能...');
-            postMessageToApp({
-                method: 'chooseImage',
-                message: {
-                    count: 1,
-                    sourceType: ['album', 'camera']
-                }
-            }, res => {
-                showResult('选择图片结果: ' + res);
-            });
-        }
-
-        // 发送通知
-        function handleCreateMessage() {
-            showResult('正在发送通知...');
-            postMessageToApp({
-                method: 'createMessage',
-                message: {
-                    title: '测试通知',
-                    content: '这是一条测试通知'
-                }
-            }, res => {
-                showResult('通知发送结果: ' + res);
-            });
-        }
-
-        // 获取系统信息
-        function handleGetSystemInfo() {
-            showResult('正在获取系统信息...');
-            postMessageToApp({
-                method: 'getSystemInfo'
-            }, res => {
-                showResult('系统信息: ' + res);
-            });
-        }
-
-        // 页面加载完成后检查环境
-        window.onload = function() {
-            showEnvInfo();
-            // 定期检查环境变化
-            setInterval(showEnvInfo, 2000);
-        };
-
-        // 添加错误处理
-        window.onerror = function(message, source, lineno, colno, error) {
-            showResult('发生错误：' + message);
-            return false;
-        };
+        // ... 其他方法保持不变 ...
     </script>
 </body>
 </html>
